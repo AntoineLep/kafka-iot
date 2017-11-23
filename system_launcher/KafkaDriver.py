@@ -3,7 +3,7 @@ import os
 import re
 from common.Utils import expand_var_and_user
 from system_launcher.Utils import log_console_output
-from common.KafkaIotException import TuxdisException
+from common.KafkaIotException import KafkaIotException
 from common.entities.Zookeeper import Zookeeper
 from common.entities.kafka.Topic import Topic
 from common.entities.kafka.TopicConfig import TopicConfig
@@ -62,7 +62,7 @@ class KafkaDriver(object):
         """
         if check_topic_existence:
             if topic_name not in self.list_topic():
-                raise TuxdisException("Topic \"%s\" doesn't exist" % topic_name)
+                raise KafkaIotException("Topic \"%s\" doesn't exist" % topic_name)
 
         p = subprocess.Popen([self._get_topic_script(), "--describe", "--zookeeper", self._zookeeper_full_address,
                               "--topic", topic_name], stdout=subprocess.PIPE)
@@ -84,7 +84,7 @@ class KafkaDriver(object):
                         topic_partition_count = int(matches.groups()[0])
                         topic_replication_factor = int(matches.groups()[1])
                     else:
-                        raise TuxdisException("Error when attempting to read topic information. "
+                        raise KafkaIotException("Error when attempting to read topic information. "
                                               "The received format doesn't match the required one")
                 else:  # Topic config line
                     matches = re.search(".*Partition:\s*(\d*).*Leader:\s*(\d*).*Replicas:\s*(\S*).*Isr:\s*(\S*)",
@@ -97,7 +97,7 @@ class KafkaDriver(object):
                             isr=list(int(isr) for isr in matches.groups()[3].split(","))
                         ))
                     else:
-                        raise TuxdisException("Error when attempting to read topic config information. "
+                        raise KafkaIotException("Error when attempting to read topic config information. "
                                               "The received format doesn't match the required one")
             else:
                 break
@@ -119,7 +119,7 @@ class KafkaDriver(object):
         """
         if check_topic_existence:
             if topic_name in self.list_topic():
-                raise TuxdisException("Topic \"%s\" already exists" % topic_name)
+                raise KafkaIotException("Topic \"%s\" already exists" % topic_name)
 
         p = subprocess.Popen([self._get_topic_script(), "--create", "--zookeeper", self._zookeeper_full_address,
                               "--replication-factor", str(replication_factor), "--partitions", str(partitions),
@@ -147,7 +147,7 @@ class KafkaDriver(object):
         """
         if check_topic_existence:
             if topic_name not in self.list_topic():
-                raise TuxdisException("Topic \"%s\" doesn't exist" % topic_name)
+                raise KafkaIotException("Topic \"%s\" doesn't exist" % topic_name)
 
         p = subprocess.Popen([self._get_topic_script(), "--delete", "--zookeeper", self._zookeeper_full_address,
                               "--topic", topic_name], stdout=subprocess.PIPE)
@@ -177,7 +177,7 @@ class KafkaDriver(object):
         """
         if check_topic_existence:
             if topic_name not in self.list_topic():
-                raise TuxdisException("Topic \"%s\" doesn't exist" % topic_name)
+                raise KafkaIotException("Topic \"%s\" doesn't exist" % topic_name)
 
         if replication_factor > 0:
             p = subprocess.Popen([self._get_topic_script(), "--alter", "--zookeeper", self._zookeeper_full_address,

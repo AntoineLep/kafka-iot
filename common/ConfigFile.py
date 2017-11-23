@@ -1,4 +1,4 @@
-from common.KafkaIotException import TuxdisException
+from common.KafkaIotException import KafkaIotException
 
 
 class ConfigFile(object):
@@ -29,10 +29,10 @@ class ConfigFile(object):
                 if param in ret:
                     ret = ret[param]
                 else:
-                    raise TuxdisException("Can't find param %s in config file" % performed_param_str)
+                    raise KafkaIotException("Can't find param %s in config file" % performed_param_str)
 
             return ret
 
         else:
-            raise TuxdisException("Given parameter for search_string must be a string! %s given instead" %
-                                  str(type(search_string)))
+            raise KafkaIotException("Given parameter for search_string must be a string! %s given instead" %
+                                    str(type(search_string)))

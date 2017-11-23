@@ -4,7 +4,7 @@ from config.SystemConfig import SystemConfig
 from common.LoggingConfig import init_logger
 from common.entities.Zookeeper import Zookeeper
 from system_launcher.KafkaDriver import KafkaDriver
-from common.KafkaIotException import TuxdisException
+from common.KafkaIotException import KafkaIotException
 
 
 if __name__ == '__main__':
@@ -35,10 +35,10 @@ if __name__ == '__main__':
         if "NAME" in topic_desc and "PARTITION_NUMBER" in topic_desc and "REPLICATION_FACTOR" in topic_desc:
             try:
                 kafka.create_topic(topic_desc["NAME"], topic_desc["REPLICATION_FACTOR"], topic_desc["PARTITION_NUMBER"])
-            except TuxdisException:
+            except KafkaIotException:
                 pass
         else:
-            raise TuxdisException("NAME | PARTITION_NUMBER | REPLICATION_FACTOR"
+            raise KafkaIotException("NAME | PARTITION_NUMBER | REPLICATION_FACTOR"
                                   " field required but not found in KAFKA.TOPIC_LIST: %s" % str(topic_desc))
 
     topics = []

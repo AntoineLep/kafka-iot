@@ -2,7 +2,7 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 from common.Utils import expand_var_and_user
-from common.KafkaIotException import TuxdisException
+from common.KafkaIotException import KafkaIotException
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -37,8 +37,8 @@ def init_logger(log_level, log_location, app_name):
         stream_handler.setFormatter(formatter)
         logger.addHandler(stream_handler)
     else:
-        raise TuxdisException("Log directory: %s does not exist, create it before relaunching the program" %
-                              log_location)
+        raise KafkaIotException("Log directory: %s does not exist, create it before relaunching the program" %
+                                log_location)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

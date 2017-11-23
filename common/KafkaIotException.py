@@ -1,7 +1,7 @@
-class TuxdisException(Exception):
+class KafkaIotException(Exception):
     """Raise generic kafka-iot exception"""
     def __init__(self, message):
         self.message = message
 
     def __str__(self):
-        return "/!\ TUXDIS EXCEPTION: " + self.message
+        return "/!\ KAFKA IOT EXCEPTION: " + self.message
