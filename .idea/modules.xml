@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Tuxdis.iml" filepath="$PROJECT_DIR$/.idea/Tuxdis.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/kafka-iot.iml" filepath="$PROJECT_DIR$/.idea/kafka-iot.iml" />
       <module fileurl="file://$PROJECT_DIR$/../satman/.idea/satman.iml" filepath="$PROJECT_DIR$/../satman/.idea/satman.iml" />
     </modules>
   </component>
