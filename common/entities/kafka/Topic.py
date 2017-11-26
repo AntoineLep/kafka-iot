@@ -4,6 +4,7 @@ import logging
 class Topic(object):
     """Topic"""
 
+    # ------------------------------------------------------------------------------------------------------------------
     def __init__(self, name, replication_factor, partition_number, config):
         """
         Topic constructor
@@ -22,6 +23,7 @@ class Topic(object):
         self.config = config
         logging.debug("Topic loaded %s" % str(self))
 
+    # ------------------------------------------------------------------------------------------------------------------
     def __str__(self):
         return "{name: %s, replication factor: %d, partition number: %d, config: %s%s}" % (
             self.name,

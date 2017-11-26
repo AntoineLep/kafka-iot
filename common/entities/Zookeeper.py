@@ -5,6 +5,7 @@ import logging
 class Zookeeper(GenericHost):
     """Zookeeper"""
 
+    # ------------------------------------------------------------------------------------------------------------------
     def __init__(self, host, port):
         """
         Zookeeper constructor
@@ -16,5 +17,6 @@ class Zookeeper(GenericHost):
         super(Zookeeper, self).__init__(host, port)
         logging.debug("Zookeeper loaded %s" % str(self))
 
+    # ------------------------------------------------------------------------------------------------------------------
     def __str__(self):
         return "{host: %s, port: %d}" % (self.host, self.port)

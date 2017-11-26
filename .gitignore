@@ -1,5 +1,5 @@
 # Logs
-system_launcher/logs/*
+system_launcher/logs/*log.txt*
 
 ### PyCharm ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm

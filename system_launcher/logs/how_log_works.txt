@@ -1,0 +1,5 @@
+By default, the logs are placed in this folder
+A log file will be created for every run of the system launcher app or if the log file size goes over 2MB
+The log system is using a rotating file handler.
+It means that once a log file is replaced, its name get suffixed with a number and another log file is created
+This behaviour can be changed by updating the LoggingConfig.py file in the "common" folder

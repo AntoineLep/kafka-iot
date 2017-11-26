@@ -178,8 +178,8 @@ class KafkaDriver(object):
             if partition_number < topic.partition_number:  # If the number of partition has te be decreased
                 self.delete_topic(topic_name, False)
                 self.create_topic(topic_name, topic.replication_factor, partition_number)
-                logging.warning("Topic \"%s\" has been deleted and recreated in order to reduce its partition number"
-                                % topic_name)
+                logging.warning("Topic \"%s\" has been deleted and re-created in order to reduce its partition number "
+                                "from %d to %d" % (topic_name, topic.partition_number, partition_number))
             else:  # Increase the number of partition
                 p = subprocess.Popen([self._get_topic_script(), "--alter", "--zookeeper", self._zookeeper_full_address,
                                       "--topic", topic_name, "--partitions", str(partition_number)],
