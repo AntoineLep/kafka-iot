@@ -23,14 +23,22 @@ class SystemConfig(ConfigFile):
                     "ID": 0,
                     "HOST": "localhost",
                     "PORT": "9092"
+                },
+                {
+                    "ID": 1,
+                    "HOST": "localhost",
+                    "PORT": "9093"
                 }
             ],
             # ----------------- #
             # TOPIC DECLARATION
             # ----------------- #
+            # /!\ Be aware that a replication factor change or a partition number decrease will result in a topic
+            # deletion and creation.
+            # Note that the replication factor can't be more than the number of available kafka brokers
             "TOPIC_LIST": [
-                {"NAME": "ping", "REPLICATION_FACTOR": 1, "PARTITION_NUMBER": 10},
-                {"NAME": "log", "REPLICATION_FACTOR": 1, "PARTITION_NUMBER": 10}
+                {"NAME": "ping", "REPLICATION_FACTOR": 2, "PARTITION_NUMBER": 5},
+                {"NAME": "log", "REPLICATION_FACTOR": 2, "PARTITION_NUMBER": 5}
             ],
             # ------------------- #
             # GLOBAL KAFKA RIGHTS

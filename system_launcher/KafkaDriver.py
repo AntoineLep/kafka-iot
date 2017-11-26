@@ -1,6 +1,7 @@
 import subprocess
 import os
 import re
+import logging
 from common.Utils import expand_var_and_user
 from system_launcher.Utils import log_console_output
 from common.KafkaIotException import KafkaIotException
@@ -28,9 +29,9 @@ class KafkaDriver(object):
         self._zookeeper_full_address = "%s:%d" % (self._zookeeper.host, self._zookeeper.port)
 
     # ------------------------------------------------------------------------------------------------------------------
-    def list_topic(self):
+    def list_topic_name(self):
         """
-        List the topics available in kafka
+        List the name of topics available in kafka
         :return: The list of topic available in kafka
         :rtype: list[str]
         """
@@ -61,13 +62,13 @@ class KafkaDriver(object):
         :rtype: Topic
         """
         if check_topic_existence:
-            if topic_name not in self.list_topic():
+            if topic_name not in self.list_topic_name():
                 raise KafkaIotException("Topic \"%s\" doesn't exist" % topic_name)
 
         p = subprocess.Popen([self._get_topic_script(), "--describe", "--zookeeper", self._zookeeper_full_address,
                               "--topic", topic_name], stdout=subprocess.PIPE)
 
-        topic_partition_count = 1
+        topic_partition_number = 1
         topic_replication_factor = 1
         topic_config = []
         i = 0
@@ -81,11 +82,11 @@ class KafkaDriver(object):
                 if i == 1:  # Topic info
                     matches = re.search(".*PartitionCount:\s*(\d*).*ReplicationFactor:\s*(\d*)", line)
                     if len(matches.groups()) == 2:  # partition count, replication factor
-                        topic_partition_count = int(matches.groups()[0])
+                        topic_partition_number = int(matches.groups()[0])
                         topic_replication_factor = int(matches.groups()[1])
                     else:
                         raise KafkaIotException("Error when attempting to read topic information. "
-                                              "The received format doesn't match the required one")
+                                                "The received format doesn't match the required one")
                 else:  # Topic config line
                     matches = re.search(".*Partition:\s*(\d*).*Leader:\s*(\d*).*Replicas:\s*(\S*).*Isr:\s*(\S*)",
                                         line)
@@ -98,10 +99,10 @@ class KafkaDriver(object):
                         ))
                     else:
                         raise KafkaIotException("Error when attempting to read topic config information. "
-                                              "The received format doesn't match the required one")
+                                                "The received format doesn't match the required one")
             else:
                 break
-        return Topic(topic_name, topic_partition_count, topic_replication_factor, topic_config)
+        return Topic(topic_name, topic_replication_factor, topic_partition_number, topic_config)
 
     # ------------------------------------------------------------------------------------------------------------------
     def create_topic(self, topic_name, replication_factor, partitions, check_topic_existence=True):
@@ -114,11 +115,9 @@ class KafkaDriver(object):
         :param partitions: The number of partition of the topic
         :type partitions: int
         :param check_topic_existence: Check if the topic exists before trying to create it
-        :type check_topic_existence: bool
-        :return: The created topic information
         """
         if check_topic_existence:
-            if topic_name in self.list_topic():
+            if topic_name in self.list_topic_name():
                 raise KafkaIotException("Topic \"%s\" already exists" % topic_name)
 
         p = subprocess.Popen([self._get_topic_script(), "--create", "--zookeeper", self._zookeeper_full_address,
@@ -133,8 +132,6 @@ class KafkaDriver(object):
             else:
                 break
 
-            return self.describe_topic(topic_name, check_topic_existence)
-
     # ------------------------------------------------------------------------------------------------------------------
     def delete_topic(self, topic_name, check_topic_existence=True):
         """
@@ -146,7 +143,7 @@ class KafkaDriver(object):
         :type check_topic_existence: bool
         """
         if check_topic_existence:
-            if topic_name not in self.list_topic():
+            if topic_name not in self.list_topic_name():
                 raise KafkaIotException("Topic \"%s\" doesn't exist" % topic_name)
 
         p = subprocess.Popen([self._get_topic_script(), "--delete", "--zookeeper", self._zookeeper_full_address,
@@ -161,51 +158,40 @@ class KafkaDriver(object):
                 break
 
     # ------------------------------------------------------------------------------------------------------------------
-    def alter_topic(self, topic_name, replication_factor=-1, partitions=-1, check_topic_existence=True):
+    def alter_topic(self, topic_name, partition_number=-1, check_topic_existence=True):
         """
         Alter a topic replication factor and / or partition number
         :param topic_name: Name of the topic to alter
         :type topic_name: str
-        :param replication_factor: New replication factor to be applied. No effect when set to -1
-        :type replication_factor: int
-        :param partitions: New partition number to be applied. No effect when set to -1
-        :type partitions: int
+        :param partition_number: New partition number to be applied. No effect when set to -1
+        :type partition_number: int
         :param check_topic_existence: Check if the topic exists before trying to delete it
         :type check_topic_existence: bool
-        :return: The altered topic info
-        :rtype: Topic
         """
         if check_topic_existence:
-            if topic_name not in self.list_topic():
+            if topic_name not in self.list_topic_name():
                 raise KafkaIotException("Topic \"%s\" doesn't exist" % topic_name)
 
-        if replication_factor > 0:
-            p = subprocess.Popen([self._get_topic_script(), "--alter", "--zookeeper", self._zookeeper_full_address,
-                                  "--topic", topic_name, "--replication-factor", str(replication_factor)],
-                                 stdout=subprocess.PIPE)
+        topic = self.describe_topic(topic_name, False)
 
-            while True:
-                line = p.stdout.readline()
-                if line != b'':
-                    line = line.decode(KafkaDriver.DEFAULT_ENCODING).replace("\n", "")
-                    log_console_output("ALTER TOPIC REPLICATION", line)
-                else:
-                    break
+        if topic.partition_number != partition_number > 0:
+            if partition_number < topic.partition_number:  # If the number of partition has te be decreased
+                self.delete_topic(topic_name, False)
+                self.create_topic(topic_name, topic.replication_factor, partition_number)
+                logging.warning("Topic \"%s\" has been deleted and recreated in order to reduce its partition number"
+                                % topic_name)
+            else:  # Increase the number of partition
+                p = subprocess.Popen([self._get_topic_script(), "--alter", "--zookeeper", self._zookeeper_full_address,
+                                      "--topic", topic_name, "--partitions", str(partition_number)],
+                                     stdout=subprocess.PIPE)
 
-        if partitions > 0:
-            p = subprocess.Popen([self._get_topic_script(), "--alter", "--zookeeper", self._zookeeper_full_address,
-                                  "--topic", topic_name, "--partitions", str(partitions)],
-                                 stdout=subprocess.PIPE)
-
-            while True:
-                line = p.stdout.readline()
-                if line != b'':
-                    line = line.decode(KafkaDriver.DEFAULT_ENCODING).replace("\n", "")
-                    log_console_output("ALTER TOPIC PARTITION", line)
-                else:
-                    break
-
-        return self.describe_topic(topic_name, check_topic_existence)
+                while True:
+                    line = p.stdout.readline()
+                    if line != b'':
+                        line = line.decode(KafkaDriver.DEFAULT_ENCODING).replace("\n", "")
+                        log_console_output("ALTER TOPIC PARTITION", line)
+                    else:
+                        break
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def _get_topic_script(self):
